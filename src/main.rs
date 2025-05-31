@@ -1,41 +1,84 @@
-// main.rs
-
 pub mod services;
 pub mod structs;
 
-use image::{RgbImage, Rgb};
+use services::{
+    geometry::{
+        create::triangle::{
+            create_triangle,
+            generate_random_triangles
+        },
+        operation::triangle::inside_of_triangle,
+    },
+    rasterizer::draw_pixel
+};
 
-fn main() {
-    let image_width = 1920;
-    let image_height = 1080;
+use structs::{
+    Point, 
+    Context,
+    Pixel,
+    Color,
+    Triangle
+};
 
-    let triangles = services::generate_random_equilateral_triangles(image_width, image_height, 50);
+fn draw_gradient_triangles(context: &mut Context, triangles: &[Triangle]) {
+    for pixel in context.frame.chunks_exact_mut(4) {
+        pixel[0] = 0; // R
+        pixel[1] = 0; // G
+        pixel[2] = 0; // B
+        pixel[3] = 0xff; // A
+    }
 
-    let mut image = RgbImage::new(image_width, image_height);
+    for y in 0..context.height {
+        for x in 0..context.width {
+            let fx = x as f32 / (context.width - 1) as f32;
+            let fy = y as f32 / (context.height - 1) as f32;
 
-    for pixel_x in 0..image_width {
-        for pixel_y in 0..image_height {
-            let pixel = structs::Point {
-                pos_x: pixel_x as f32 - (image_width as f32 / 2.0),
-                pos_y: pixel_y as f32 - (image_height as f32 / 2.0),
+            let red = ((1.0 - fx) * (1.0 - fy) * 255.0) as u8;
+            let green = (fx * (1.0 - fy) * 255.0) as u8;
+            let blue = ((1.0 - fx) * fy * 255.0) as u8;
+
+            let pixel = Point {
+                pos_x: x as f32,
+                pos_y: y as f32
             };
 
-            let horizontal_ratio = pixel_x as f32 / (image_width - 1) as f32;
-            let vertical_ratio = pixel_y as f32 / (image_height - 1) as f32;
-
-            let red_intensity = ((1.0 - vertical_ratio) * horizontal_ratio * 255.0) as u8;
-            let green_intensity = (vertical_ratio * (1.0 - horizontal_ratio) * 255.0) as u8;
-            let blue_intensity = (vertical_ratio * horizontal_ratio * 255.0) as u8;
-
-            let pixel_color = Rgb([red_intensity, green_intensity, blue_intensity]);
-
-            for triangle in &triangles {
-                if services::inside_triangle(pixel, triangle) {
-                    image.put_pixel(pixel_x, pixel_y, pixel_color);
+            for triangle in triangles {
+                if inside_of_triangle(pixel, triangle) {
+                    let pixel = Pixel {
+                        pos_x: x,
+                        pos_y: y
+                    };
+                    let color = Color {
+                        red,
+                        green,
+                        blue,
+                        alpha: 0xff
+                    };
+                    draw_pixel(context, pixel, color);
                 }
             }
         }
     }
+}
 
-    image.save("image.bmp").unwrap();
+fn main() {
+    env_logger::init();
+
+    let event_loop = winit::event_loop::EventLoop::new();
+    let window_service = services::window::WindowService::new(&event_loop);
+
+    window_service.run(event_loop, move |frame, width, height| {
+        let triangles = generate_random_triangles(
+            10,         // cantidad de triángulos
+            (20.0, 100.0), // escala mínima y máxima
+            width as f32,
+            height as f32,
+        );
+        let mut context = Context {
+            frame,
+            width,
+            height,
+        };
+        draw_gradient_triangles(&mut context, &triangles);
+    });
 }
