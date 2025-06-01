@@ -1,4 +1,4 @@
-use crate::structs::{Point, Line};
+use crate::structs::geometry::{Point, Line};
 
 pub fn at_left_of_line(point: Point, line: Line) -> bool {
     let start = line.point_a;

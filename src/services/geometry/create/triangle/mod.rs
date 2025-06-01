@@ -1,5 +1,5 @@
-use crate::structs::{Point, Triangle};
-use crate::services::geometry::create::line::create_line;
+use crate::structs::geometry::{Point, Triangle};
+use crate::structs::rasterization::{Color};
 
 use rand::Rng;
 
@@ -25,17 +25,25 @@ pub fn generate_random_triangles(
         let point_b = Point { pos_x: base_x + scale, pos_y: base_y };
         let point_c = Point { pos_x: base_x,         pos_y: base_y + scale };
 
-        let triangle = create_triangle(point_a, point_b, point_c);
+        let color = Color {
+            red: 255,
+            green: 0,
+            blue: 0,
+            alpha: 0xff,
+        };
+
+        let triangle = create_triangle(point_a, point_b, point_c, color);
         triangles.push(triangle);
     }
 
     triangles
 }
 
-pub fn create_triangle(point_a: Point, point_b: Point, point_c: Point) -> Triangle {
+pub fn create_triangle(point_a: Point, point_b: Point, point_c: Point, color: Color) -> Triangle {
     Triangle {
-        line_ab: create_line(point_a, point_b),
-        line_bc: create_line(point_b, point_c),
-        line_ca: create_line(point_c, point_a),
+        point_a,
+        point_b,
+        point_c,
+        color,
     }
 }

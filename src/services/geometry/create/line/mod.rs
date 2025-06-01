@@ -1,4 +1,4 @@
-use crate::structs::{Point, Line};
+use crate::structs::geometry::{Point, Line};
 
 pub fn create_line(point_a: Point, point_b: Point) -> Line {
     Line {

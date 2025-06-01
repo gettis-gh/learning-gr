@@ -1,11 +1,13 @@
-pub mod math;
-
 use crate::structs::{
-    Color,
-    Context,
-    Triangle,
-    Point,
-    TriangleGrid
+    geometry::{
+        Point,
+        Triangle3,
+    },
+    rasterization::{
+        TriangleGrid,
+        Color,
+        Context,
+    }
 };
 
 use rayon::prelude::{ParallelSliceMut, ParallelIterator, IndexedParallelIterator};
@@ -28,8 +30,8 @@ pub fn draw_pixels<FColor, FCond>(
     condition_fn: FCond,
 )
 where
-    FColor: Fn(usize, usize, &Point) -> Color + Sync + Send,
-    FCond: Fn(&Point, &[Triangle]) -> bool + Sync + Send,
+    FColor: Fn(usize, usize, &Point, &[Triangle3]) -> Color + Sync + Send,
+    FCond: Fn(&Point, &[Triangle3]) -> bool + Sync + Send,
 {
     let width = context.width;
 
@@ -52,7 +54,7 @@ where
 
             let triangles = &triangle_grid.grid[cell];
             if condition_fn(&point, triangles) {
-                let color = color_fn(pixel_x, pixel_y, &point);
+                let color = color_fn(pixel_x, pixel_y, &point, triangles);
                 pixel[0] = color.red;
                 pixel[1] = color.green;
                 pixel[2] = color.blue;
