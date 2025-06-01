@@ -76,10 +76,10 @@ fn main() {
         println!(" - {}", path.display());
     }
 
-    let path = "./assets/dragon/scene.gltf";
+    let path = "./assets/car_pack/scene.gltf";
     let meshes = load_meshes_from_gltf(&path);
 
-    for mesh in meshes {
+    for mesh in meshes[0..5].iter().cloned() {
         let position = Vector3::new(
             rng.gen_range(300.0..500.0),
             rng.gen_range(200.0..400.0),
@@ -103,12 +103,21 @@ fn main() {
         let angular_velocity = AngularVelocity { axis, speed };
 
         let num_triangles = mesh.indices.len() / 3;
+
+        let color = Color {
+            red: rng.gen_range(0..=255),
+            green: rng.gen_range(0..=255),
+            blue: rng.gen_range(0..=255),
+            alpha: 0xff
+        };
+
         let triangle_colors: Vec<Color> = (0..num_triangles)
-            .map(|_| Color {
-                red: rng.gen_range(0..=255),
-                green: rng.gen_range(0..=255),
-                blue: rng.gen_range(0..=255),
-                alpha: 0xff,
+            .map(|_| {
+                let red = (color.red as i16 + rng.gen_range(-30..30)).clamp(0, 255) as u8;
+                let green = (color.green as i16 + rng.gen_range(-30..30)).clamp(0, 255) as u8;
+                let blue = (color.blue as i16 + rng.gen_range(-30..30)).clamp(0, 255) as u8;
+
+                Color { red, green, blue, alpha: 0xff }
             })
             .collect();
     
